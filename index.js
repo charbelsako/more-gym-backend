@@ -5,6 +5,7 @@ const express = require('express');
 // @routes
 const userRouter = require('./routes/user');
 const adminRouter = require('./routes/admin');
+const staticDataRouter = require('./routes/staticdata');
 // const trainerRouter = require('./routes/trainer');
 
 const PORT = process.env.PORT;
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/admin', adminRouter);
+app.user('/api/v1/static-data', staticDataRouter);
 // app.use('/api/v1/trainer', trainerRouter);
 
 app.listen(PORT, () => {

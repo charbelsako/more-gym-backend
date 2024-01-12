@@ -5,6 +5,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 
 const User = require('../models/User');
+const StaticData = require('../models/StaticData');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
@@ -42,6 +43,34 @@ router.post(
       res.status(200).json({ message: 'User password reset successful' });
     } catch (error) {
       console.error('Error during user password reset:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+);
+
+// Route to update static data (accessible only by admins)
+router.put(
+  '/update-static-data',
+  authenticateToken,
+  isAdmin,
+  async (req, res) => {
+    try {
+      const { locations, cancelTime, classTypes } = req.body;
+      // Update the static data based on the request body
+      await StaticData.findOneAndUpdate(
+        {},
+        { locations, cancelTime, classTypes },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+
+      res
+        .status(200)
+        .json({ message: 'Static data updated or created successfully' });
+    } catch (error) {
+      console.error('Error updating static data:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   }
