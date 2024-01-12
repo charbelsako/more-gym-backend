@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs'); // You may need to install this package
 const jwt = require('jsonwebtoken'); // You may need to install this package
 const { authenticateToken } = require('../middleware/authenticate');
 
+const validateRegisterInput = require('../validators/validateSignUp');
 const User = require('../models/User'); // Assuming you have a User model
 
 router.post('/signup', async (req, res) => {
@@ -55,10 +56,10 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Find the user with the given email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
 
     // Check if the user exists
     if (!user) {

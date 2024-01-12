@@ -18,7 +18,8 @@ mongoose
   .catch(err => console.log(err));
 
 const app = express();
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/user', userRouter);
 // app.use('/api/v1/admin', adminRouter);
 // app.use('/api/v1/trainer', trainerRouter);
