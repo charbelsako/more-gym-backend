@@ -122,6 +122,58 @@ router.post('/reset-password', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/user-data', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find the user by ID and exclude sensitive information like password
+    const user = await User.findById(userId).select('-password -role');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ userData: user });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.put('/update-user-info', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // Check if the username already exists
+    const existingUser = await User.findOne({ username: req.body.username });
+
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: 'User already exists with this username' });
+    }
+
+    // Update user information based on the request body
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+    user.defaultLocation = req.body.defaultLocation || user.defaultLocation;
+    user.name = req.body.name || user.name;
+
+    await user.save();
+
+    res.status(200).json({ message: 'User information updated successfully' });
+  } catch (error) {
+    console.error('Error updating user information:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // @TODO just for testing
 router.get('/protected', authenticateToken, (req, res) => {
   // If the token is valid, this code will be executed
