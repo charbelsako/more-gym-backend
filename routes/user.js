@@ -9,7 +9,7 @@ const User = require('../models/User'); // Assuming you have a User model
 
 router.post('/signup', async (req, res) => {
   try {
-    const { username, email, password, name } = req.body;
+    const { username, email, password, name, defaultLocation } = req.body;
 
     const { errors, isValid } = validateRegisterInput(req.body);
 
@@ -43,6 +43,7 @@ router.post('/signup', async (req, res) => {
       email,
       password: hashedPassword,
       name,
+      defaultLocation,
     });
 
     await newUser.save();
@@ -58,15 +59,12 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Find the user with the given email
     const user = await User.findOne({ username });
 
-    // Check if the user exists
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Compare the provided password with the hashed password in the database
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -74,9 +72,13 @@ router.post('/login', async (req, res) => {
     }
 
     // If the password is valid, create a JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1h',
+      }
+    );
 
     res
       .status(200)
@@ -87,6 +89,40 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/reset-password', authenticateToken, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the old password matches the one in the database
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid old password' });
+    }
+
+    // Hash the new password before updating
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the password in the database
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Error during password reset:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// @TODO just for testing
 router.get('/protected', authenticateToken, (req, res) => {
   // If the token is valid, this code will be executed
   res.json({ message: 'This is a protected route', user: req.user });
