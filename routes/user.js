@@ -10,7 +10,6 @@ router.post('/signup', async (req, res) => {
   try {
     const { username, email, password, name, defaultLocation } = req.body;
 
-    console.log(req.body);
     const { errors, isValid } = validateRegisterInput(req.body);
 
     // Check validation
@@ -90,10 +89,9 @@ router.post('/reset-password', verifyJWT, async (req, res) => {
 
 router.get('/user-data', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.userId;
-
+    const userId = req.user._id;
     // Find the user by ID and exclude sensitive information like password
-    const user = await User.findById(userId).select('-password -role');
+    const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
