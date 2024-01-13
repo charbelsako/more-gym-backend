@@ -10,6 +10,7 @@ router.post('/signup', async (req, res) => {
   try {
     const { username, email, password, name, defaultLocation } = req.body;
 
+    console.log(req.body);
     const { errors, isValid } = validateRegisterInput(req.body);
 
     // Check validation
