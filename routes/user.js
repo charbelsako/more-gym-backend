@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs'); // You may need to install this package
-const jwt = require('jsonwebtoken'); // You may need to install this package
-const { authenticateToken } = require('../middleware/authenticate');
 
 const validateRegisterInput = require('../validators/validateSignUp');
 const User = require('../models/User'); // Assuming you have a User model
+const { verifyJWT } = require('../middleware/verifyJWT');
 
 router.post('/signup', async (req, res) => {
   try {
@@ -55,41 +54,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid password' });
-    }
-
-    // If the password is valid, create a JWT token
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: '1h',
-      }
-    );
-
-    res
-      .status(200)
-      .json({ token, userId: user._id, message: 'Login successful' });
-  } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-router.post('/reset-password', authenticateToken, async (req, res) => {
+router.post('/reset-password', verifyJWT, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
     const userId = req.user.userId;
@@ -122,7 +87,7 @@ router.post('/reset-password', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/user-data', authenticateToken, async (req, res) => {
+router.get('/user-data', verifyJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
 
@@ -140,7 +105,7 @@ router.get('/user-data', authenticateToken, async (req, res) => {
   }
 });
 
-router.put('/update-user-info', authenticateToken, async (req, res) => {
+router.put('/update-user-info', verifyJWT, async (req, res) => {
   try {
     const userId = req.user.userId;
 
@@ -175,7 +140,7 @@ router.put('/update-user-info', authenticateToken, async (req, res) => {
 });
 
 // @TODO just for testing
-router.get('/protected', authenticateToken, (req, res) => {
+router.get('/protected', verifyJWT, (req, res) => {
   // If the token is valid, this code will be executed
   res.json({ message: 'This is a protected route', user: req.user });
 });
