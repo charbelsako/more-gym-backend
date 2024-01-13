@@ -27,11 +27,11 @@ mongoose
   .catch(err => console.log(err));
 
 const app = express();
+app.use(cookieParser());
 app.use(credentials);
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use('/api/v1/auth/', authRouter);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/admin', adminRouter);
