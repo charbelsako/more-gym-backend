@@ -8,6 +8,7 @@ const userRouter = require('./routes/user');
 const adminRouter = require('./routes/admin');
 const staticDataRouter = require('./routes/staticdata');
 const authRouter = require('./routes/auth/authRouter');
+const trainerRouter = require('./routes/trainer');
 // const trainerRouter = require('./routes/trainer');
 
 const cors = require('cors');
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth/', authRouter);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/trainer', trainerRouter);
 app.use('/api/v1/static-data', staticDataRouter);
 // app.use('/api/v1/trainer', trainerRouter);
 

@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 
+const trainerTypes = {
+  BOXING: 'Boxing',
+  PT: 'PT',
+  Physio: 'Physio',
+};
+
 const userSchema = new mongoose.Schema({
   email: { type: String },
   name: { type: String },
@@ -8,6 +14,13 @@ const userSchema = new mongoose.Schema({
   defaultLocation: { type: String },
   role: { type: String },
   refreshToken: { type: String },
+  schedule: [
+    {
+      day: { type: String },
+      availableTimes: {}, // @NOTE: this is open because specific schema is not yet agreed upon (or optimized)
+    },
+  ],
+  trainerType: { type: String, enum: Object.values(trainerTypes) },
 });
 
 module.exports = User = mongoose.model('user', userSchema);

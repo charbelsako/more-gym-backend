@@ -8,7 +8,8 @@ const { verifyJWT } = require('../middleware/verifyJWT');
 
 router.post('/signup', async (req, res) => {
   try {
-    const { username, email, password, name, defaultLocation } = req.body;
+    const { username, email, password, name, defaultLocation, isTrainer } =
+      req.body;
 
     const { errors, isValid } = validateRegisterInput(req.body);
 
@@ -36,7 +37,8 @@ router.post('/signup', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    let role = 'customer';
+    if (isTrainer) role = 'trainer';
     const newUser = new User({
       username,
       email,
