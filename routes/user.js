@@ -57,7 +57,7 @@ router.post('/signup', async (req, res) => {
 router.post('/reset-password', verifyJWT, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     // Find the user by ID
     const user = await User.findById(userId);
@@ -106,8 +106,7 @@ router.get('/user-data', verifyJWT, async (req, res) => {
 
 router.put('/update-user-info', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.userId;
-
+    const userId = req.user._id;
     // Find the user by ID
     const user = await User.findById(userId);
 
