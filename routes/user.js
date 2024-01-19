@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); // You may need to install this package
+const bcrypt = require('bcryptjs');
 
 const validateRegisterInput = require('../validators/validateSignUp');
-const User = require('../models/User'); // Assuming you have a User model
+const User = require('../models/User');
+const Appointment = require('../models/Appointment');
 const { verifyJWT } = require('../middleware/verifyJWT');
+const { appointmentStatus } = require('../constants');
 
 router.post('/signup', async (req, res) => {
   try {
@@ -147,6 +149,42 @@ router.put('/update-user-info', verifyJWT, async (req, res) => {
     console.error('Error updating user information:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+});
+
+router.post('/register-appointment', verifyJWT, async (req, res) => {
+  const { date, time, trainerId } = req.body;
+  const userId = req.user._id;
+
+  // @TODO check if anyone has previously saved this appointment
+  const existingAppointment = await Appointment.findOne({
+    trainerId,
+    date,
+    time,
+    status: appointmentStatus.CONFIRMED,
+  });
+  if (existingAppointment) {
+    return res.status(409).json({
+      error: 'Conflict',
+      message: 'Appointment already taken',
+    });
+  }
+
+  const newAppointment = new Appointment({
+    trainerId,
+    userId,
+    date,
+    time,
+    status: appointmentStatus.CONFIRMED, // Assuming you want to set the status to 'Confirmed' by default
+  });
+
+  // Saving the appointment to the database
+  const savedAppointment = await newAppointment.save();
+
+  // Sending a response
+  res.status(200).json({
+    message: 'Appointment registered successfully',
+    appointment: savedAppointment,
+  });
 });
 
 // @TODO just for testing

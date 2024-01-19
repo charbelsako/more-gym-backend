@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); // Assuming you have a User model
 const { verifyJWT } = require('../middleware/verifyJWT');
-const { ROLES } = require('../constants');
+const { ROLES, appointmentStatus } = require('../constants');
 const moment = require('moment');
+const Appointment = require('../models/Appointment');
 
 router.post('/add-time', verifyJWT, async (req, res) => {
   try {
@@ -33,24 +34,35 @@ router.post('/add-time', verifyJWT, async (req, res) => {
 router.get('/get-availability', verifyJWT, async (req, res) => {
   try {
     const { date, type } = req.body;
-    const dayOfWeek = moment(date).format('dddd');
-    console.log(dayOfWeek);
-    // @TODO: find trainers with that type
+    const dateObject = moment(date);
+    const dayOfWeek = dateObject.format('dddd');
+    console.log('date object', dateObject.utc().startOf('day'));
     const trainersList = await User.find({
       role: ROLES.TRAINER,
       trainerType: type,
     }).lean();
-    console.log(trainersList);
-    // @TODO return available times for that day
+
     let availableAppointments = [];
     await Promise.all(
-      trainersList.map(trainer => {
+      trainersList.map(async trainer => {
         const { schedule } = trainer;
         if (!schedule) return;
         for (let i = 0; i < schedule.length; i++) {
           const { availableTimes, day } = schedule[i];
           if (day === dayOfWeek) {
             for (const key in availableTimes) {
+              // @TODO check if anyone has previously saved this appointment
+              const existingAppointment = await Appointment.findOne({
+                trainerId: trainer._id,
+                date: dateObject.toISOString(),
+                time: key,
+                status: appointmentStatus.CONFIRMED,
+              });
+
+              if (existingAppointment) {
+                delete availableTimes[key];
+              }
+
               if (!availableTimes[key]) delete availableTimes[key];
             }
             availableAppointments.push({
@@ -58,6 +70,7 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
               trainer: trainer.name,
               availableTimes: availableTimes,
               type: trainer.trainerType,
+              id: trainer._id,
             });
           }
         }
