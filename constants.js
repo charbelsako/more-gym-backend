@@ -13,4 +13,17 @@ const cookieOptions = {
   sameSite: 'none',
 };
 
-module.exports = { statusCodes, cookieOptions };
+const ROLES = {
+  TRAINER: 'trainer',
+  CUSTOMER: 'customer',
+  ADMIN: 'admin',
+};
+
+const trainerTypes = {
+  BOXING: 'Boxing',
+  PT: 'PT',
+  Physio: 'Physio',
+  Pilates: 'Pilates',
+};
+
+module.exports = { statusCodes, cookieOptions, ROLES, trainerTypes };

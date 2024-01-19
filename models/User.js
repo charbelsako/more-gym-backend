@@ -1,10 +1,5 @@
 const mongoose = require('mongoose');
-
-const trainerTypes = {
-  BOXING: 'Boxing',
-  PT: 'PT',
-  Physio: 'Physio',
-};
+const { trainerTypes } = require('../constants');
 
 const userSchema = new mongoose.Schema({
   email: { type: String },
