@@ -26,4 +26,15 @@ const trainerTypes = {
   Pilates: 'Pilates',
 };
 
-module.exports = { statusCodes, cookieOptions, ROLES, trainerTypes };
+const appointmentStatus = {
+  CONFIRMED: 'Confirmed',
+  CANCELLED: 'Cancelled',
+};
+
+module.exports = {
+  appointmentStatus,
+  statusCodes,
+  cookieOptions,
+  ROLES,
+  trainerTypes,
+};
