@@ -33,10 +33,10 @@ router.post('/add-time', verifyJWT, async (req, res) => {
 
 router.get('/get-availability', verifyJWT, async (req, res) => {
   try {
-    const { date, type } = req.body;
-    const dateObject = moment(date);
+    const { date, type } = req.query;
+    const offset = moment().utcOffset();
+    const dateObject = moment(date).add(offset, 'minutes');
     const dayOfWeek = dateObject.format('dddd');
-    console.log('date object', dateObject.utc().startOf('day'));
     const trainersList = await User.find({
       role: ROLES.TRAINER,
       trainerType: type,
@@ -51,7 +51,6 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
           const { availableTimes, day } = schedule[i];
           if (day === dayOfWeek) {
             for (const key in availableTimes) {
-              // @TODO check if anyone has previously saved this appointment
               const existingAppointment = await Appointment.findOne({
                 trainerId: trainer._id,
                 date: dateObject.toISOString(),
@@ -70,7 +69,7 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
               trainer: trainer.name,
               availableTimes: availableTimes,
               type: trainer.trainerType,
-              id: trainer._id,
+              trainerId: trainer._id,
             });
           }
         }
