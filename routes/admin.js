@@ -9,6 +9,7 @@ const StaticData = require('../models/StaticData');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
+const { verifyJWT } = require('../middleware/verifyJWT');
 
 router.post('/reset-user-password', verifyJWT, isAdmin, async (req, res) => {
   try {
