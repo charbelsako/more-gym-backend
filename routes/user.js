@@ -6,19 +6,12 @@ const validateRegisterInput = require('../validators/validateSignUp');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const { verifyJWT } = require('../middleware/verifyJWT');
-const { appointmentStatus } = require('../constants');
+const { appointmentStatus, ROLES } = require('../constants');
 
 router.post('/signup', async (req, res) => {
   try {
-    const {
-      username,
-      email,
-      password,
-      name,
-      defaultLocation,
-      isTrainer,
-      trainerType,
-    } = req.body;
+    const { username, email, password, name, defaultLocation, trainerType } =
+      req.body;
 
     const { errors, isValid } = validateRegisterInput(req.body);
 
@@ -46,16 +39,13 @@ router.post('/signup', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    let role = 'customer';
-    if (isTrainer) role = 'trainer';
-    console.log(role, isTrainer);
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       name,
       defaultLocation,
-      role,
+      role: ROLES.CUSTOMER,
       trainerType,
     });
 

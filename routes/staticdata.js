@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const StaticData = require('../models/StaticData');
-const { authenticateToken } = require('../middleware/authenticate');
+const { verifyJWT } = require('../middleware/verifyJWT');
 
 // Route to get locations from static data
-router.get('/locations', authenticateToken, async (req, res) => {
+router.get('/locations', verifyJWT, async (req, res) => {
   try {
     const staticData = await StaticData.findOne();
     if (!staticData) {
@@ -21,7 +21,7 @@ router.get('/locations', authenticateToken, async (req, res) => {
 });
 
 // Route to get cancelTime from static data
-router.get('/cancel-time', authenticateToken, async (req, res) => {
+router.get('/cancel-time', verifyJWT, async (req, res) => {
   try {
     const staticData = await StaticData.findOne();
     if (!staticData) {
@@ -37,7 +37,7 @@ router.get('/cancel-time', authenticateToken, async (req, res) => {
 });
 
 // Route to get classTypes from static data
-router.get('/class-types', authenticateToken, async (req, res) => {
+router.get('/class-types', verifyJWT, async (req, res) => {
   try {
     const staticData = await StaticData.findOne();
     if (!staticData) {
