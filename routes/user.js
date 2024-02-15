@@ -10,8 +10,9 @@ const { appointmentStatus, ROLES } = require('../constants');
 
 router.post('/signup', async (req, res) => {
   try {
-    const { username, email, password, name, defaultLocation, trainerType } =
-      req.body;
+    const { username, password, name, defaultLocation, trainerType } = req.body;
+
+    let { email } = req.body;
 
     const { errors, isValid } = validateRegisterInput(req.body);
 
@@ -19,7 +20,7 @@ router.post('/signup', async (req, res) => {
     if (!isValid) {
       return res.status(400).json(errors);
     }
-
+    email = email.toLowerCase();
     // Check if email already exists
     const existingEmail = await User.findOne({ email });
 
