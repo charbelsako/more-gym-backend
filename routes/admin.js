@@ -3,12 +3,14 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 
 const User = require('../models/User');
 const StaticData = require('../models/StaticData');
 const PackageType = require('../models/PackageType');
 const SessionType = require('../models/SessionType');
 const Membership = require('../models/Membership');
+const MembershipHistory = require('../models/MembershipHistory');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
@@ -112,53 +114,61 @@ router.post('/create-session-type', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.post(
-  '/create-trainer-package-type',
-  verifyJWT,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const { type, capacity } = req.body;
-
-      // Validate that 'type' and 'capacity' are provided
-      if (!type || !capacity) {
-        return res
-          .status(400)
-          .json({ error: 'Type and capacity are required' });
-      }
-
-      // Create a new Membership document
-      const newMembership = new Membership({ type, capacity });
-
-      // Save the document to the database
-      const savedMembership = await newMembership.save();
-
-      res.status(201).json(savedMembership);
-    } catch (error) {
-      console.error('Error creating Membership:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+router.post('/get-session-types', verifyJWT, isAdmin, async (req, res) => {
+  try {
+    const sessionTypes = await SessionType.find();
+    res.status(200).json(sessionTypes);
+  } catch (error) {
+    console.error('Error getting Session types:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-);
+});
 
-router.get(
-  '/get-trainer-package-types',
-  verifyJWT,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const types = await Membership.find({})
-        .populate('capacity')
-        .populate('type');
-      res.status(200).json(types);
-    } catch (error) {
-      console.error('Error getting Membership:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+router.post('/get-package-types', verifyJWT, isAdmin, async (req, res) => {
+  try {
+    const packageTypes = await PackageType.find();
+    res.status(200).json(packageTypes);
+  } catch (error) {
+    console.error('Error getting Package types:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-);
+});
 
-router.get('/users', verifyJWT, async (req, res) => {
+router.post('/create-membership', verifyJWT, isAdmin, async (req, res) => {
+  try {
+    const { type, capacity } = req.body;
+
+    // Validate that 'type' and 'capacity' are provided
+    if (!type || !capacity) {
+      return res.status(400).json({ error: 'Type and capacity are required' });
+    }
+
+    // Create a new Membership document
+    const newMembership = new Membership({ type, capacity });
+
+    // Save the document to the database
+    const savedMembership = await newMembership.save();
+
+    res.status(201).json(savedMembership);
+  } catch (error) {
+    console.error('Error creating Membership:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/get-memberships', verifyJWT, isAdmin, async (req, res) => {
+  try {
+    const types = await Membership.find({})
+      .populate('capacity')
+      .populate('type');
+    res.status(200).json(types);
+  } catch (error) {
+    console.error('Error getting Membership:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/users', verifyJWT, isAdmin, async (req, res) => {
   try {
     const users = await User.find({ role: ROLES.CUSTOMER }).select(
       '-refreshToken -password -schedule'
@@ -166,6 +176,25 @@ router.get('/users', verifyJWT, async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     console.error('Error getting Users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/add-customer-membership', verifyJWT, async (req, res) => {
+  try {
+    const { membership, userId } = req.body;
+    const user = User.findById(userId);
+    if (!user) throw new Error('User not found');
+    user.membership = membership;
+    const currentDate = moment();
+    user.startDate = currentDate;
+    user.endDate = currentDate.add(30, 'days');
+    await user.save();
+    const membershipHistory = new MembershipHistory({ userId, membership });
+    await membershipHistory.save();
+    res.status(200).json(user.membership);
+  } catch (error) {
+    console.error('Error setting user membership:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

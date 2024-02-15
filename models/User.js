@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
     default: undefined,
   },
   trainerType: { type: String, enum: Object.values(trainerTypes) },
+  membership: { type: mongoose.Schema.Types.ObjectId, ref: 'membership' },
+  membershipStartDate: Date,
+  membershipEndDate: Date,
 });
 
 module.exports = User = mongoose.model('user', userSchema);
