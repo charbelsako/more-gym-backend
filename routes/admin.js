@@ -170,9 +170,9 @@ router.get('/get-memberships', verifyJWT, isAdmin, async (req, res) => {
 
 router.get('/users', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const users = await User.find({ role: ROLES.CUSTOMER }).select(
-      '-refreshToken -password -schedule'
-    );
+    const users = await User.find({ role: ROLES.CUSTOMER })
+      .select('-refreshToken -password -schedule')
+      .populate('membership');
     res.status(200).json(users);
   } catch (error) {
     console.error('Error getting Users:', error);
@@ -183,15 +183,22 @@ router.get('/users', verifyJWT, isAdmin, async (req, res) => {
 router.post('/add-customer-membership', verifyJWT, async (req, res) => {
   try {
     const { membership, userId } = req.body;
-    const user = User.findById(userId);
-    if (!user) throw new Error('User not found');
-    user.membership = membership;
     const currentDate = moment();
-    user.startDate = currentDate;
-    user.endDate = currentDate.add(30, 'days');
+
+    const user = await User.findById(userId);
+
+    if (!user) throw new Error('User not found');
+
+    user.membership = membership;
+
+    user.membershipStartDate = currentDate;
+    user.membershipEndDate = currentDate.add(30, 'days');
+
     await user.save();
+
     const membershipHistory = new MembershipHistory({ userId, membership });
     await membershipHistory.save();
+
     res.status(200).json(user.membership);
   } catch (error) {
     console.error('Error setting user membership:', error);
