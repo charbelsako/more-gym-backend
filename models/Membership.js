@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
-const memberShipSchema = new mongoose.Schema({
-  type: { type: mongoose.Schema.Types.ObjectId, ref: 'trainerPackageType' },
-  sessionNumber: Number,
-  price: Number,
+const membershipSchema = new mongoose.Schema({
+  type: { type: mongoose.Schema.Types.ObjectId, ref: 'packageType' },
+  capacity: { type: mongoose.Schema.Types.ObjectId, ref: 'sessionType' },
 });
 
-module.exports = Membership = mongoose.model('membership', memberShipSchema);
+module.exports = Membership = mongoose.model('membership', membershipSchema);

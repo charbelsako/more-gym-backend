@@ -8,7 +8,7 @@ const User = require('../models/User');
 const StaticData = require('../models/StaticData');
 const PackageType = require('../models/PackageType');
 const SessionType = require('../models/SessionType');
-const TrainerPackageType = require('../models/TrainerPackageType');
+const Membership = require('../models/Membership');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
@@ -126,15 +126,15 @@ router.post(
           .json({ error: 'Type and capacity are required' });
       }
 
-      // Create a new TrainerPackageType document
-      const newTrainerPackageType = new TrainerPackageType({ type, capacity });
+      // Create a new Membership document
+      const newMembership = new Membership({ type, capacity });
 
       // Save the document to the database
-      const savedTrainerPackageType = await newTrainerPackageType.save();
+      const savedMembership = await newMembership.save();
 
-      res.status(201).json(savedTrainerPackageType);
+      res.status(201).json(savedMembership);
     } catch (error) {
-      console.error('Error creating TrainerPackageType:', error);
+      console.error('Error creating Membership:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
@@ -146,12 +146,12 @@ router.get(
   isAdmin,
   async (req, res) => {
     try {
-      const types = await TrainerPackageType.find({})
+      const types = await Membership.find({})
         .populate('capacity')
         .populate('type');
       res.status(200).json(types);
     } catch (error) {
-      console.error('Error getting TrainerPackageType:', error);
+      console.error('Error getting Membership:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
