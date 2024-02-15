@@ -74,7 +74,7 @@ router.put('/update-static-data', verifyJWT, isAdmin, async (req, res) => {
 
 router.post('/create-package-type', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const { type } = req.body;
+    const { type, capacity } = req.body;
 
     // Validate that 'type' is provided
     if (!type) {
@@ -82,10 +82,10 @@ router.post('/create-package-type', verifyJWT, isAdmin, async (req, res) => {
     }
 
     // Create a new PackageType document
-    const newPackageType = new PackageType({ type });
+    const newPackageType = new PackageType({ type, capacity });
 
     // Save the document to the database
-    const savedPackageType = await newPackageType.save();
+    await newPackageType.save();
 
     res.status(201).json({ message: 'Successfully created a package type' });
   } catch (error) {
@@ -114,7 +114,7 @@ router.post('/create-session-type', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/get-session-types', verifyJWT, isAdmin, async (req, res) => {
+router.get('/get-session-types', verifyJWT, isAdmin, async (req, res) => {
   try {
     const sessionTypes = await SessionType.find();
     res.status(200).json(sessionTypes);
@@ -124,7 +124,7 @@ router.post('/get-session-types', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/get-package-types', verifyJWT, isAdmin, async (req, res) => {
+router.get('/get-package-types', verifyJWT, isAdmin, async (req, res) => {
   try {
     const packageTypes = await PackageType.find();
     res.status(200).json(packageTypes);
