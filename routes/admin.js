@@ -172,7 +172,10 @@ router.get('/users', verifyJWT, isAdmin, async (req, res) => {
   try {
     const users = await User.find({ role: ROLES.CUSTOMER })
       .select('-refreshToken -password -schedule')
-      .populate('membership');
+      .populate({
+        path: 'membership',
+        populate: [{ path: 'type' }, { path: 'capacity' }],
+      });
     res.status(200).json(users);
   } catch (error) {
     console.error('Error getting Users:', error);
