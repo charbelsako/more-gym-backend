@@ -136,15 +136,17 @@ router.get('/get-package-types', verifyJWT, isAdmin, async (req, res) => {
 
 router.post('/create-membership', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const { type, capacity } = req.body;
+    const { type, sessionType, price } = req.body;
 
     // Validate that 'type' and 'capacity' are provided
-    if (!type || !capacity) {
-      return res.status(400).json({ error: 'Type and capacity are required' });
+    if (!type || !sessionType) {
+      return res.status(400).json({
+        error: 'Number of sessions and package type and price are required',
+      });
     }
 
     // Create a new Membership document
-    const newMembership = new Membership({ type, capacity });
+    const newMembership = new Membership({ type, sessionType, price });
 
     // Save the document to the database
     const savedMembership = await newMembership.save();
@@ -159,7 +161,7 @@ router.post('/create-membership', verifyJWT, isAdmin, async (req, res) => {
 router.get('/get-memberships', verifyJWT, isAdmin, async (req, res) => {
   try {
     const types = await Membership.find({})
-      .populate('capacity')
+      .populate('sessionType')
       .populate('type');
     res.status(200).json(types);
   } catch (error) {
