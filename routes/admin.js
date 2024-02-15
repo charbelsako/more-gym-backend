@@ -8,7 +8,7 @@ const moment = require('moment');
 const User = require('../models/User');
 const StaticData = require('../models/StaticData');
 const PackageType = require('../models/PackageType');
-const SessionType = require('../models/SessionType');
+const PackageSubtype = require('../models/PackageSubtype');
 const Membership = require('../models/Membership');
 const MembershipHistory = require('../models/MembershipHistory');
 
@@ -94,7 +94,7 @@ router.post('/create-package-type', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/create-session-type', verifyJWT, isAdmin, async (req, res) => {
+router.post('/create-package-subtype', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { sessionNumber } = req.body;
 
@@ -103,9 +103,11 @@ router.post('/create-session-type', verifyJWT, isAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Number of sessions is required' });
     }
 
-    const newSessionType = new SessionType({ numberOfSessions: sessionNumber });
+    const newPackageSubType = new PackageSubtype({
+      numberOfSessions: sessionNumber,
+    });
 
-    await newSessionType.save();
+    await newPackageSubType.save();
 
     res.status(201).json({ message: 'Successfully created a session type' });
   } catch (error) {
@@ -114,12 +116,12 @@ router.post('/create-session-type', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.get('/get-session-types', verifyJWT, isAdmin, async (req, res) => {
+router.get('/get-package-subtypes', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const sessionTypes = await SessionType.find();
-    res.status(200).json(sessionTypes);
+    const packageSubTypes = await PackageSubtype.find();
+    res.status(200).json(packageSubTypes);
   } catch (error) {
-    console.error('Error getting Session types:', error);
+    console.error('Error getting Package Sub types:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -136,17 +138,18 @@ router.get('/get-package-types', verifyJWT, isAdmin, async (req, res) => {
 
 router.post('/create-membership', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const { type, sessionType, price } = req.body;
+    const { type, sessionType, subtype, price } = req.body;
 
     // Validate that 'type' and 'capacity' are provided
-    if (!type || !sessionType) {
+    if (!type || !sessionType || !subtype || !price) {
       return res.status(400).json({
-        error: 'Number of sessions and package type and price are required',
+        error:
+          'Number of sessions and package type + subtype and price are required',
       });
     }
 
     // Create a new Membership document
-    const newMembership = new Membership({ type, sessionType, price });
+    const newMembership = new Membership({ type, sessionType, price, subtype });
 
     // Save the document to the database
     const savedMembership = await newMembership.save();
@@ -162,7 +165,8 @@ router.get('/get-memberships', verifyJWT, isAdmin, async (req, res) => {
   try {
     const types = await Membership.find({})
       .populate('sessionType')
-      .populate('type');
+      .populate('type')
+      .populate('subtype');
     res.status(200).json(types);
   } catch (error) {
     console.error('Error getting Membership:', error);

@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 
 const membershipSchema = new mongoose.Schema({
   type: { type: mongoose.Schema.Types.ObjectId, ref: 'packageType' },
-  sessionType: { type: mongoose.Schema.Types.ObjectId, ref: 'sessionType' },
+  subType: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'packageSubType',
+  },
+  sessionType: String,
   price: Number,
 });
 
