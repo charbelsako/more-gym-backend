@@ -9,12 +9,15 @@ const userSchema = new mongoose.Schema({
   defaultLocation: { type: String },
   role: { type: String },
   refreshToken: { type: String },
-  schedule: [
-    {
-      day: { type: String },
-      availableTimes: {}, // @NOTE: this is open because specific schema is not yet agreed upon (or optimized)
-    },
-  ],
+  schedule: {
+    type: [
+      {
+        day: { type: String },
+        availableTimes: {}, // @NOTE: this is open because specific schema is not yet agreed upon (or optimized)
+      },
+    ],
+    default: undefined,
+  },
   trainerType: { type: String, enum: Object.values(trainerTypes) },
 });
 

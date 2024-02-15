@@ -13,6 +13,7 @@ const Membership = require('../models/Membership');
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
 const { verifyJWT } = require('../middleware/verifyJWT');
+const { ROLES } = require('../constants');
 
 router.post('/reset-user-password', verifyJWT, isAdmin, async (req, res) => {
   try {
@@ -156,5 +157,17 @@ router.get(
     }
   }
 );
+
+router.get('/users', verifyJWT, async (req, res) => {
+  try {
+    const users = await User.find({ role: ROLES.CUSTOMER }).select(
+      '-refreshToken -password -schedule'
+    );
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error getting Users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 module.exports = router;
