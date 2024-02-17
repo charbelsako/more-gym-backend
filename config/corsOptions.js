@@ -7,6 +7,7 @@ const corsOptions = {
     } else if (process.env.NODE_ENV === 'development' && !origin) {
       callback(null, true);
     } else {
+	 console.log(origin);
       callback(new Error('Not allowed by CORS'));
     }
   },

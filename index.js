@@ -1,7 +1,8 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+require('dotenv').config({path: path.join(__dirname, '.env') });
 
 // @routes
 const userRouter = require('./routes/user');
@@ -38,7 +39,14 @@ app.use('/api/v1/user', userRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/trainer', trainerRouter);
 app.use('/api/v1/static-data', staticDataRouter);
-// app.use('/api/v1/trainer', trainerRouter);
+
+app.use(express.static(path.join(__dirname, '../more-gym-app/build')));
+
+app.get('*', (req, res) =>
+  res.sendFile(
+    path.resolve(__dirname, '../', 'more-gym-app', 'build', 'index.html')
+  )
+);
 
 app.listen(PORT, () => {
   console.log(`listening on http://localhost:${PORT}`);
