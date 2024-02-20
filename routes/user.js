@@ -192,9 +192,13 @@ router.get('/history', verifyJWT, async (req, res) => {
   try {
     const membershipHistory = await MembershipHistory.find({
       userId: req.user._id,
+    }).populate({
+      path: 'membership',
+      populate: [{ path: 'subType' }, { path: 'type' }],
     });
     res.status(200).json(membershipHistory);
   } catch (err) {
+    console.log(err);
     res.status(500).send('Internal server error');
   }
 });
