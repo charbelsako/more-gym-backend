@@ -182,7 +182,7 @@ router.get('/users', verifyJWT, isAdmin, async (req, res) => {
       .select('-refreshToken -password -schedule')
       .populate({
         path: 'membership',
-        populate: [{ path: 'type' }, { path: 'capacity' }],
+        populate: [{ path: 'type' }, { path: 'subType' }],
       })
       .sort({ createdAt: -1 });
     res.status(200).json(users);
@@ -194,21 +194,29 @@ router.get('/users', verifyJWT, isAdmin, async (req, res) => {
 
 router.post('/add-customer-membership', verifyJWT, async (req, res) => {
   try {
-    const { membership, userId } = req.body;
+    const { membership, userId: userEmail } = req.body;
     const currentDate = moment();
 
-    const user = await User.findById(userId);
+    const user = await User.findOne({ email: userEmail });
 
     if (!user) throw new Error('User not found');
+
+    const membershipObject = await Membership.findById(membership).populate(
+      'subType'
+    );
 
     user.membership = membership;
 
     user.membershipStartDate = currentDate;
     user.membershipEndDate = currentDate.add(30, 'days');
+    user.numberOfSessions = membershipObject.subType.numberOfSessions;
 
     await user.save();
 
-    const membershipHistory = new MembershipHistory({ userId, membership });
+    const membershipHistory = new MembershipHistory({
+      userId: user._id,
+      membership,
+    });
     await membershipHistory.save();
 
     res.status(200).json(user.membership);
