@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
 
-const memberShipHistorySchema = new mongoose.Schema({
-  membership: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'membership',
+const memberShipHistorySchema = new mongoose.Schema(
+  {
+    membership: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'membership',
+    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
-});
+  {
+    timestamps: true,
+  }
+);
 
 module.exports = MembershipHistory = mongoose.model(
   'membershipHistory',
