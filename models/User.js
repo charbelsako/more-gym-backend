@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema(
     membership: { type: mongoose.Schema.Types.ObjectId, ref: 'membership' },
     membershipStartDate: Date,
     membershipEndDate: Date,
+    numberOfSessions: Number,
+    totalSessions: Number,
   },
   { timestamps: true }
 );
