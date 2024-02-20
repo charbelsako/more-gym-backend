@@ -7,6 +7,7 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const { verifyJWT } = require('../middleware/verifyJWT');
 const { appointmentStatus, ROLES } = require('../constants');
+const MembershipHistory = require('../models/MembershipHistory');
 
 router.post('/signup', async (req, res) => {
   try {
@@ -96,7 +97,12 @@ router.get('/user-data', verifyJWT, async (req, res) => {
   try {
     const userId = req.user._id;
     // Find the user by ID and exclude sensitive information like password
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId)
+      .select('-password')
+      .populate({
+        path: 'membership',
+        populate: [{ path: 'type' }, { path: 'subType' }],
+      });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -143,39 +149,54 @@ router.put('/update-user-info', verifyJWT, async (req, res) => {
 });
 
 router.post('/register-appointment', verifyJWT, async (req, res) => {
-  const { date, time, trainerId } = req.body;
-  const userId = req.user._id;
+  try {
+    const { date, time, trainerId } = req.body;
+    const userId = req.user._id;
 
-  // @TODO check if anyone has previously saved this appointment
-  const existingAppointment = await Appointment.findOne({
-    trainerId,
-    date,
-    time,
-    status: appointmentStatus.CONFIRMED,
-  });
-  if (existingAppointment) {
-    return res.status(409).json({
-      error: 'Conflict',
-      message: 'Appointment already taken',
+    // @TODO check if anyone has previously saved this appointment
+    const existingAppointment = await Appointment.findOne({
+      trainerId,
+      date,
+      time,
+      status: appointmentStatus.CONFIRMED,
     });
+    if (existingAppointment) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'Appointment already taken',
+      });
+    }
+
+    const newAppointment = new Appointment({
+      trainerId,
+      userId,
+      date,
+      time,
+      status: appointmentStatus.CONFIRMED, // Assuming you want to set the status to 'Confirmed' by default
+    });
+
+    // Saving the appointment to the database
+    const savedAppointment = await newAppointment.save();
+
+    // Sending a response
+    res.status(200).json({
+      message: 'Appointment registered successfully',
+      appointment: savedAppointment,
+    });
+  } catch (error) {
+    res.status(500).send('Internal server error');
   }
+});
 
-  const newAppointment = new Appointment({
-    trainerId,
-    userId,
-    date,
-    time,
-    status: appointmentStatus.CONFIRMED, // Assuming you want to set the status to 'Confirmed' by default
-  });
-
-  // Saving the appointment to the database
-  const savedAppointment = await newAppointment.save();
-
-  // Sending a response
-  res.status(200).json({
-    message: 'Appointment registered successfully',
-    appointment: savedAppointment,
-  });
+router.get('/history', verifyJWT, async (req, res) => {
+  try {
+    const membershipHistory = await MembershipHistory.find({
+      userId: req.user._id,
+    });
+    res.status(200).json(membershipHistory);
+  } catch (err) {
+    res.status(500).send('Internal server error');
+  }
 });
 
 // @TODO just for testing
