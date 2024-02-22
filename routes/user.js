@@ -150,7 +150,7 @@ router.put('/update-user-info', verifyJWT, async (req, res) => {
 
 router.post('/register-appointment', verifyJWT, async (req, res) => {
   try {
-    const { date, time, trainerId } = req.body;
+    const { date, time, trainerId, location } = req.body;
     const userId = req.user._id;
 
     // @TODO check if anyone has previously saved this appointment
@@ -159,6 +159,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       date,
       time,
       status: appointmentStatus.CONFIRMED,
+      location,
     });
     if (existingAppointment) {
       return res.status(409).json({

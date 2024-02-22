@@ -7,6 +7,7 @@ const appointmentSchema = new mongoose.Schema({
   date: Date,
   time: Number, // 8 or 9 or 10 ....
   status: { type: String, enum: Object.values(appointmentStatus) },
+  location: String,
 });
 
 module.exports = Appointments = mongoose.model(
