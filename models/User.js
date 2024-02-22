@@ -8,7 +8,7 @@ const availableTimesSchema = new mongoose.Schema({
 
 const locationSchema = new mongoose.Schema({
   _id: false,
-  location: { type: String, required: true },
+  location: { type: String },
   availability: [availableTimesSchema],
 });
 
