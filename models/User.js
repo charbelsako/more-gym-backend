@@ -1,6 +1,17 @@
 const mongoose = require('mongoose');
 const { trainerTypes } = require('../constants');
 
+const availableTimesSchema = new mongoose.Schema({
+  day: { type: String },
+  availableTimes: {},
+});
+
+const locationSchema = new mongoose.Schema({
+  _id: false,
+  location: { type: String, required: true },
+  availability: [availableTimesSchema],
+});
+
 const userSchema = new mongoose.Schema(
   {
     email: { type: String },
@@ -11,12 +22,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String },
     refreshToken: { type: String },
     schedule: {
-      type: [
-        {
-          day: { type: String },
-          availableTimes: {}, // @NOTE: this is open because specific schema is not yet agreed upon (or optimized)
-        },
-      ],
+      type: [locationSchema],
       default: undefined,
     },
     trainerType: { type: String, enum: Object.values(trainerTypes) },
@@ -25,6 +31,7 @@ const userSchema = new mongoose.Schema(
     membershipEndDate: Date,
     numberOfSessions: Number,
     totalSessions: Number,
+    locations: [String],
   },
   { timestamps: true }
 );

@@ -33,22 +33,25 @@ router.post('/add-time', verifyJWT, async (req, res) => {
 
 router.get('/get-availability', verifyJWT, async (req, res) => {
   try {
-    const { date, type } = req.query;
+    const { date, type, location } = req.query;
     const offset = moment().utcOffset();
     const dateObject = moment(date).add(offset, 'minutes');
     const dayOfWeek = dateObject.format('dddd');
     const trainersList = await User.find({
       role: ROLES.TRAINER,
       trainerType: type,
+      locations: { $in: [location] },
     }).lean();
 
     let availableAppointments = [];
     await Promise.all(
       trainersList.map(async trainer => {
         const { schedule } = trainer;
+        const { availability } = schedule;
+        if (schedule.location !== location) return;
         if (!schedule) return;
-        for (let i = 0; i < schedule.length; i++) {
-          const { availableTimes, day } = schedule[i];
+        for (let i = 0; i < availability.length; i++) {
+          const { availableTimes, day } = availability[i];
           if (day === dayOfWeek) {
             for (const key in availableTimes) {
               const existingAppointment = await Appointment.findOne({
@@ -65,7 +68,7 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
               if (!availableTimes[key]) delete availableTimes[key];
             }
             availableAppointments.push({
-              day: schedule[i].day,
+              day: availability[i].day,
               trainer: trainer.name,
               availableTimes: availableTimes,
               type: trainer.trainerType,
