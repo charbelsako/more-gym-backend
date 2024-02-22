@@ -152,6 +152,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
   try {
     const { date, time, trainerId, location } = req.body;
     const userId = req.user._id;
+    const user = User.findById(req.user._id);
 
     // @TODO check if anyone has previously saved this appointment
     const existingAppointment = await Appointment.findOne({
@@ -168,6 +169,18 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       });
     }
 
+    if (user.numberOfSessions < 1) {
+      return res.status(500).json({ message: 'Number of appointments passed' });
+    }
+
+    const currDate = moment();
+    const endDateObject = moment(user.membershipEndDate);
+    if (currDate.isAfter(endDateObject)) {
+      return res
+        .status(500)
+        .json({ message: 'Membership has ended, cannot book appointment' });
+    }
+
     const newAppointment = new Appointment({
       trainerId,
       userId,
@@ -177,14 +190,12 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       location,
     });
 
-    // Saving the appointment to the database
     const savedAppointment = await newAppointment.save();
 
-    const user = User.findById(req.user._id);
     user.numberOfSessions = user.numberOfSessions - 1;
     user.totalSessions = user.totalSessions + 1;
     user.save();
-    // Sending a response
+
     res.status(200).json({
       message: 'Appointment registered successfully',
       appointment: savedAppointment,
