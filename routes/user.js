@@ -239,6 +239,29 @@ router.get('/history', verifyJWT, async (req, res) => {
   }
 });
 
+router.get('/appointments/all', verifyJWT, async (req, res) => {
+  try {
+    const appointments = await Appointment.find({ userId: req.user._id }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json(appointments);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/appointments/:id', verifyJWT, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointment.findById(id).sort({ createdAt: -1 });
+    res.status(200).json(appointment);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 // @TODO just for testing
 router.get('/protected', verifyJWT, (req, res) => {
   // If the token is valid, this code will be executed
