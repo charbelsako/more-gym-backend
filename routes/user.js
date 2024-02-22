@@ -174,11 +174,16 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       date,
       time,
       status: appointmentStatus.CONFIRMED, // Assuming you want to set the status to 'Confirmed' by default
+      location,
     });
 
     // Saving the appointment to the database
     const savedAppointment = await newAppointment.save();
 
+    const user = User.findById(req.user._id);
+    user.numberOfSessions = user.numberOfSessions - 1;
+    user.totalSessions = user.totalSessions + 1;
+    user.save();
     // Sending a response
     res.status(200).json({
       message: 'Appointment registered successfully',
