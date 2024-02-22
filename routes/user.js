@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 
 const validateRegisterInput = require('../validators/validateSignUp');
 const User = require('../models/User');
@@ -152,7 +153,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
   try {
     const { date, time, trainerId, location } = req.body;
     const userId = req.user._id;
-    const user = User.findById(req.user._id);
+    const user = await User.findById(req.user._id);
 
     // @TODO check if anyone has previously saved this appointment
     const existingAppointment = await Appointment.findOne({
@@ -201,6 +202,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       appointment: savedAppointment,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).send('Internal server error');
   }
 });
