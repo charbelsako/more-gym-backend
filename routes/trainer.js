@@ -46,10 +46,13 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
     let availableAppointments = [];
     await Promise.all(
       trainersList.map(async trainer => {
-        const { schedule } = trainer;
+        let { schedule } = trainer;
+        schedule = schedule.filter(item => item.location === location)[0];
+        console.log(schedule);
         const { availability } = schedule;
-        if (schedule.location !== location) return;
+
         if (!schedule) return;
+
         for (let i = 0; i < availability.length; i++) {
           const { availableTimes, day } = availability[i];
           if (day === dayOfWeek) {
@@ -78,7 +81,7 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
         }
       })
     );
-    return res.status(200).json({ data: availableAppointments });
+    return res.status(200).json({ data: availableAppointments, location });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error.' });
