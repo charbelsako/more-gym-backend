@@ -191,11 +191,11 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       location,
     });
 
-    const savedAppointment = await newAppointment.save();
-
     user.numberOfSessions = user.numberOfSessions - 1;
     user.totalSessions = user.totalSessions + 1;
     user.save();
+
+    const savedAppointment = await newAppointment.save();
 
     res.status(200).json({
       message: 'Appointment registered successfully',
