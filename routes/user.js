@@ -194,6 +194,25 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
   }
 });
 
+router.patch('/:id/cancel-appointment', verifyJWT, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Appointment.findByIdAndUpdate(id, {
+      status: appointmentStatus.CANCELLED,
+    });
+
+    const user = await User.findById(req.user._id);
+    user.totalSessions = user.totalSessions - 1;
+    user.numberOfSessions = user.numberOfSessions + 1;
+    await user.save();
+
+    res.status(200).json({ message: 'Cancelled Successfully' });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 router.get('/history', verifyJWT, async (req, res) => {
   try {
     const membershipHistory = await MembershipHistory.find({
