@@ -173,7 +173,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       userId,
       date,
       time,
-      status: appointmentStatus.CONFIRMED, // Assuming you want to set the status to 'Confirmed' by default
+      status: appointmentStatus.CONFIRMED,
       location,
     });
 
