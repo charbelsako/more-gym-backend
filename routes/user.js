@@ -6,6 +6,7 @@ const moment = require('moment');
 const validateRegisterInput = require('../validators/validateSignUp');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
+const StaticData = require('../models/StaticData');
 const { verifyJWT } = require('../middleware/verifyJWT');
 const { appointmentStatus, ROLES } = require('../constants');
 const MembershipHistory = require('../models/MembershipHistory');
@@ -210,9 +211,26 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
 router.patch('/:id/cancel-appointment', verifyJWT, async (req, res) => {
   try {
     const { id } = req.params;
-    await Appointment.findByIdAndUpdate(id, {
-      status: appointmentStatus.CANCELLED,
-    });
+    const appointment = await Appointment.findById(id);
+
+    const staticData = await StaticData.findOne();
+    const { cancelTime } = staticData;
+    const currTime = moment();
+    const appointmentTime = moment(
+      `${moment(appointment.date).format('YYYY-MM-DD')} ${appointment.time}`,
+      'YYYY-MM-DD HH'
+    );
+
+    const diff = appointmentTime.diff(currTime, 'hours');
+
+    if (diff < cancelTime) {
+      return res.status(400).json({
+        message: `Cannot cancel appointment when there are only ${cancelTime} hours left`,
+      });
+    }
+
+    appointment.status = appointmentStatus.CANCELLED;
+    await appointment.save();
 
     const user = await User.findById(req.user._id);
     user.totalSessions = user.totalSessions - 1;
