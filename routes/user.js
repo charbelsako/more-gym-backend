@@ -156,15 +156,19 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
     const userId = req.user._id;
     const user = await User.findById(req.user._id);
 
+    const trainerObject = await User.findById(trainerId).populate(
+      'trainerPackageType'
+    );
+    const { capacity } = trainerObject.trainerPackageType;
     // @TODO check if anyone has previously saved this appointment
-    const existingAppointment = await Appointment.findOne({
+    const existingAppointments = await Appointment.findOne({
       trainerId,
       date,
       time,
       status: appointmentStatus.CONFIRMED,
       location,
     });
-    if (existingAppointment) {
+    if (existingAppointments.length >= capacity) {
       return res.status(409).json({
         error: 'Conflict',
         message: 'Appointment already taken',

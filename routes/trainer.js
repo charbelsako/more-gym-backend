@@ -34,21 +34,32 @@ router.post('/add-time', verifyJWT, async (req, res) => {
 router.get('/get-availability', verifyJWT, async (req, res) => {
   try {
     const { date, type, location } = req.query;
+
     const offset = moment().utcOffset();
     const dateObject = moment(date).add(offset, 'minutes');
     const dayOfWeek = dateObject.format('dddd');
+
+    const id = req.user._id;
+    const user = await User.findById(id).populate({
+      path: 'membership',
+      select: 'type',
+      populate: [{ path: 'type' }],
+    });
+    const { _id } = user.membership.type;
     const trainersList = await User.find({
       role: ROLES.TRAINER,
       trainerType: type,
       locations: { $in: [location] },
-    }).lean();
+      trainerPackageType: _id,
+    })
+      .populate('trainerPackageType')
+      .lean();
 
     let availableAppointments = [];
     await Promise.all(
       trainersList.map(async trainer => {
-        let { schedule } = trainer;
+        let { schedule, trainerPackageType } = trainer;
         schedule = schedule.filter(item => item.location === location)[0];
-        console.log(schedule);
         const { availability } = schedule;
 
         if (!schedule) return;
@@ -57,14 +68,14 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
           const { availableTimes, day } = availability[i];
           if (day === dayOfWeek) {
             for (const key in availableTimes) {
-              const existingAppointment = await Appointment.findOne({
+              const existingAppointments = await Appointment.find({
                 trainerId: trainer._id,
                 date: dateObject.toISOString(),
                 time: key,
                 status: appointmentStatus.CONFIRMED,
               });
 
-              if (existingAppointment) {
+              if (existingAppointments.length >= trainerPackageType.capacity) {
                 delete availableTimes[key];
               }
 

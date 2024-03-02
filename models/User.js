@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema(
       type: [locationSchema],
       default: undefined,
     },
+    trainerPackageType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'packageType',
+    },
     trainerType: { type: String, enum: Object.values(trainerTypes) },
     membership: { type: mongoose.Schema.Types.ObjectId, ref: 'membership' },
     membershipStartDate: Date,
