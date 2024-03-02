@@ -161,13 +161,13 @@ router.post('/create-membership', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.get('/get-memberships', verifyJWT, isAdmin, async (req, res) => {
+router.get('/get-memberships', async (req, res) => {
   try {
-    const types = await Membership.find({})
+    const memberships = await Membership.find({})
       .populate('sessionType')
       .populate('type')
       .populate('subType');
-    res.status(200).json(types);
+    res.status(200).json(memberships);
   } catch (error) {
     console.error('Error getting Membership:', error);
     res.status(500).json({ error: 'Internal Server Error' });
