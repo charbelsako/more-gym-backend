@@ -216,6 +216,8 @@ router.post('/add-customer-membership', verifyJWT, async (req, res) => {
     const membershipHistory = new MembershipHistory({
       userId: user._id,
       membership,
+      membershipStartDate: user.membershipStartDate,
+      membershipEndDate: user.membershipEndDate,
     });
     await membershipHistory.save();
 

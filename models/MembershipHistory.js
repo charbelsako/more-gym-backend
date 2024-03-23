@@ -7,6 +7,8 @@ const memberShipHistorySchema = new mongoose.Schema(
       ref: 'membership',
     },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    membershipStartDate: Date,
+    memberShipEndDate: Date,
   },
   {
     timestamps: true,
