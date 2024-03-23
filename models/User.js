@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
     membershipStartDate: Date,
     membershipEndDate: Date,
     numberOfSessions: Number,
-    totalSessions: Number,
+    totalSessions: { type: Number, default: 0 },
     locations: [String],
   },
   { timestamps: true }

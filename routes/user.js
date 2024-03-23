@@ -237,7 +237,8 @@ router.patch('/:id/cancel-appointment', verifyJWT, async (req, res) => {
     await appointment.save();
 
     const user = await User.findById(req.user._id);
-    user.totalSessions = user.totalSessions - 1;
+    user.totalSessions =
+      user.totalSessions - 1 < 0 ? 0 : user.totalSessions - 1;
     user.numberOfSessions = user.numberOfSessions + 1;
     await user.save();
 
