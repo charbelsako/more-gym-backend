@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-require('dotenv').config({path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // @routes
 const userRouter = require('./routes/user');
@@ -42,6 +42,7 @@ app.use('/api/v1/static-data', staticDataRouter);
 
 app.use(express.static(path.join(__dirname, '../more-gym-app/build')));
 
+// @NOTE: this line is for development only
 app.get('*', (req, res) =>
   res.sendFile(
     path.resolve(__dirname, '../', 'more-gym-app', 'build', 'index.html')
