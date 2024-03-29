@@ -266,10 +266,30 @@ router.get('/history', verifyJWT, async (req, res) => {
 
 router.get('/appointments/all', verifyJWT, async (req, res) => {
   try {
-    const appointments = await Appointment.find({ userId: req.user._id }).sort({
-      createdAt: -1,
+    const appointments = await Appointment.find({
+      userId: req.user._id,
+    }).sort({
+      date: -1,
+      time: -1,
     });
     res.status(200).json(appointments);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/appointments/today', verifyJWT, async (req, res) => {
+  try {
+    const todayStart = moment().startOf('day');
+    const todayEnd = moment().endOf('day');
+    const todaysAppointments = await Appointment.find({
+      userId: req.user._id,
+      date: { $gte: todayStart, $lte: todayEnd },
+    }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json(todaysAppointments);
   } catch (err) {
     console.log(err);
     res.status(500).send('Internal server error');
