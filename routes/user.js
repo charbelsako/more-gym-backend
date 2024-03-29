@@ -287,7 +287,8 @@ router.get('/appointments/today', verifyJWT, async (req, res) => {
       userId: req.user._id,
       date: { $gte: todayStart, $lte: todayEnd },
     }).sort({
-      createdAt: -1,
+      date: -1,
+      time: -1,
     });
     res.status(200).json(todaysAppointments);
   } catch (err) {
