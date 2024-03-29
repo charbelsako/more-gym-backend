@@ -99,4 +99,36 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
   }
 });
 
+router.get('/appointments/all', verifyJWT, async (req, res) => {
+  try {
+    const appointments = await Appointment.find({
+      trainerId: req.user._id,
+    }).sort({
+      date: -1,
+      time: -1,
+    });
+    res.status(200).json(appointments);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/appointments/today', verifyJWT, async (req, res) => {
+  try {
+    const todayStart = moment().startOf('day');
+    const todayEnd = moment().endOf('day');
+    const todaysAppointments = await Appointment.find({
+      trainerId: req.user._id,
+      date: { $gte: todayStart, $lte: todayEnd },
+    }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json(todaysAppointments);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 module.exports = router;
