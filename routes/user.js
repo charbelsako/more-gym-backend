@@ -168,7 +168,7 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       status: appointmentStatus.CONFIRMED,
       location,
     });
-    if (existingAppointments.length >= capacity) {
+    if (existingAppointments && existingAppointments.length >= capacity) {
       return res.status(409).json({
         error: 'Conflict',
         message: 'Appointment already taken',
