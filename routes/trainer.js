@@ -101,8 +101,14 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
 
 router.get('/appointments/all', verifyJWT, async (req, res) => {
   try {
+    const { date, location } = req.query;
+    const startDate = moment(date).startOf('day');
+    const endDate = moment(date).endOf('day');
+
     const appointments = await Appointment.find({
       trainerId: req.user._id,
+      ...(date ? { date: { $gte: startDate, $lte: endDate } } : {}),
+      location,
     }).sort({
       date: -1,
       time: -1,
@@ -116,11 +122,13 @@ router.get('/appointments/all', verifyJWT, async (req, res) => {
 
 router.get('/appointments/today', verifyJWT, async (req, res) => {
   try {
+    const { location } = req.query;
     const todayStart = moment().startOf('day');
     const todayEnd = moment().endOf('day');
     const todaysAppointments = await Appointment.find({
       trainerId: req.user._id,
       date: { $gte: todayStart, $lte: todayEnd },
+      location,
     }).sort({
       date: -1,
       time: -1,
