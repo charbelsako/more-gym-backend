@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
     refreshToken: { type: String },
     schedule: {
       type: [locationSchema],
-      default: undefined,
+      default: [],
     },
     trainerPackageType: {
       type: mongoose.Schema.Types.ObjectId,
