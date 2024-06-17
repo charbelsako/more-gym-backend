@@ -177,7 +177,25 @@ router.get('/get-memberships', async (req, res) => {
 router.get('/users', verifyJWT, isAdmin, async (req, res) => {
   try {
     const users = await User.find({
-      role: { $in: [ROLES.CUSTOMER, ROLES.TRAINER] },
+      role: { $in: [ROLES.CUSTOMER] },
+    })
+      .select('-refreshToken -password -schedule')
+      .populate({
+        path: 'membership',
+        populate: [{ path: 'type' }, { path: 'subType' }],
+      })
+      .sort({ createdAt: -1 });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error getting Users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/trainers', verifyJWT, isAdmin, async (req, res) => {
+  try {
+    const users = await User.find({
+      role: { $in: [ROLES.TRAINER] },
     })
       .select('-refreshToken -password -schedule')
       .populate({
