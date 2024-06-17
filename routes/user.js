@@ -156,6 +156,9 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
     const userId = req.user._id;
     const user = await User.findById(req.user._id);
 
+    const staticData = await StaticData.findOne();
+    const { maxAppointments } = staticData;
+
     const trainerObject = await User.findById(trainerId).populate(
       'trainerPackageType'
     );
@@ -172,6 +175,19 @@ router.post('/register-appointment', verifyJWT, async (req, res) => {
       return res.status(409).json({
         error: 'Conflict',
         message: 'Appointment already taken',
+      });
+    }
+
+    const totalAppointments = await Appointment.find({
+      date,
+      time,
+      status: appointmentStatus.CONFIRMED,
+      location,
+    });
+    if (totalAppointments.length > maxAppointments) {
+      return res.status(500).json({
+        error: 'Max Number Reached',
+        message: 'Max appointments reached',
       });
     }
 

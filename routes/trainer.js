@@ -45,6 +45,9 @@ router.get('/get-availability', verifyJWT, async (req, res) => {
       select: 'type',
       populate: [{ path: 'type' }],
     });
+    if (!user.membership) {
+      return res.status(500).json({ error: 'user has no membership' });
+    }
     const { _id } = user.membership.type;
     const trainersList = await User.find({
       role: ROLES.TRAINER,
