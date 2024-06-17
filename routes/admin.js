@@ -62,7 +62,7 @@ router.get('/static-data', verifyJWT, async (req, res) => {
 // Route to update static data (accessible only by admins)
 router.put('/update-static-data', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const { locations, cancelTime, classTypes } = req.body;
+    const { locations, cancelTime, classTypes, maxAppointments } = req.body;
     let staticData = await StaticData.findOne(); // Assuming there's only one staticData document
 
     if (!staticData) {
@@ -72,6 +72,7 @@ router.put('/update-static-data', verifyJWT, isAdmin, async (req, res) => {
     staticData.locations = locations;
     staticData.cancelTime = cancelTime;
     staticData.classTypes = classTypes;
+    staticData.maxAppointments = maxAppointments;
 
     await staticData.save();
 
