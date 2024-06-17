@@ -5,10 +5,8 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else if (process.env.NODE_ENV === 'development' && !origin) {
-      console.log('allowed');
       callback(null, true);
     } else {
-      console.log('not allowed', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
