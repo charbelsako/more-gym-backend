@@ -49,19 +49,31 @@ router.post('/reset-user-password', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
+router.get('/static-data', verifyJWT, async (req, res) => {
+  try {
+    const staticData = await StaticData.findOne();
+
+    res.status(200).json(staticData);
+  } catch (err) {
+    res.status(500).json({ message: 'internal server error' });
+  }
+});
+
 // Route to update static data (accessible only by admins)
 router.put('/update-static-data', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { locations, cancelTime, classTypes } = req.body;
-    // Update the static data based on the request body
-    await StaticData.findOneAndUpdate(
-      {},
-      { locations, cancelTime, classTypes },
-      {
-        upsert: true,
-        new: true,
-      }
-    );
+    let staticData = await StaticData.findOne(); // Assuming there's only one staticData document
+
+    if (!staticData) {
+      staticData = new StaticData();
+    }
+
+    staticData.locations = locations;
+    staticData.cancelTime = cancelTime;
+    staticData.classTypes = classTypes;
+
+    await staticData.save();
 
     res
       .status(200)
