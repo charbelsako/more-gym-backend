@@ -223,38 +223,57 @@ router.get('/trainers', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/add-customer-membership', verifyJWT, async (req, res) => {
+router.post(
+  '/add-customer-membership',
+  verifyJWT,
+  isAdmin,
+  async (req, res) => {
+    try {
+      const { membership, userId: userEmail } = req.body;
+      const currentDate = moment();
+
+      const user = await User.findOne({ email: userEmail });
+
+      if (!user) throw new Error('User not found');
+
+      const membershipObject = await Membership.findById(membership).populate(
+        'subType'
+      );
+
+      user.membership = membership;
+
+      user.membershipStartDate = currentDate;
+      user.membershipEndDate = currentDate.add(30, 'days');
+      user.numberOfSessions = membershipObject.subType.numberOfSessions;
+
+      await user.save();
+
+      const membershipHistory = new MembershipHistory({
+        userId: user._id,
+        membership,
+        membershipStartDate: user.membershipStartDate,
+        membershipEndDate: user.membershipEndDate,
+      });
+      await membershipHistory.save();
+
+      res.status(200).json(user.membership);
+    } catch (error) {
+      console.error('Error setting user membership:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+);
+
+router.get('/membership-renewal', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const { membership, userId: userEmail } = req.body;
-    const currentDate = moment();
-
-    const user = await User.findOne({ email: userEmail });
-
-    if (!user) throw new Error('User not found');
-
-    const membershipObject = await Membership.findById(membership).populate(
-      'subType'
-    );
-
-    user.membership = membership;
-
-    user.membershipStartDate = currentDate;
-    user.membershipEndDate = currentDate.add(30, 'days');
-    user.numberOfSessions = membershipObject.subType.numberOfSessions;
-
-    await user.save();
-
-    const membershipHistory = new MembershipHistory({
-      userId: user._id,
-      membership,
-      membershipStartDate: user.membershipStartDate,
-      membershipEndDate: user.membershipEndDate,
+    const thisWeekStart = moment().startOf('week');
+    const thisWeekEnd = moment().endOf('week');
+    const users = await User.find({
+      membershipEndDate: { $lte: thisWeekEnd, $gte: thisWeekStart },
     });
-    await membershipHistory.save();
-
-    res.status(200).json(user.membership);
-  } catch (error) {
-    console.error('Error setting user membership:', error);
+    res.status(200).json(users);
+  } catch (err) {
+    console.log('Error getting user with memberships ending this week');
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
