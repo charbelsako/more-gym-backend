@@ -112,10 +112,12 @@ router.get('/appointments/all', verifyJWT, async (req, res) => {
       trainerId: req.user._id,
       ...(date ? { date: { $gte: startDate, $lte: endDate } } : {}),
       location,
-    }).sort({
-      date: -1,
-      time: -1,
-    });
+    })
+      .sort({
+        date: -1,
+        time: -1,
+      })
+      .populate('userId');
     res.status(200).json(appointments);
   } catch (err) {
     console.log(err);
