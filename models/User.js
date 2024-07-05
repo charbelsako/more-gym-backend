@@ -14,6 +14,8 @@ const locationSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema(
   {
+    birthday: { type: Date },
+    gender: { type: String },
     email: { type: String },
     name: { type: String },
     username: { type: String },
