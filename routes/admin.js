@@ -11,6 +11,8 @@ const PackageType = require('../models/PackageType');
 const PackageSubtype = require('../models/PackageSubtype');
 const Membership = require('../models/Membership');
 const MembershipHistory = require('../models/MembershipHistory');
+const Appointment = require('../models/Appointment');
+const { appointmentStatus } = require('../constants');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
@@ -229,10 +231,10 @@ router.post(
   isAdmin,
   async (req, res) => {
     try {
-      const { membership, userId: userEmail } = req.body;
+      const { membership, userId } = req.body;
       const currentDate = moment();
 
-      const user = await User.findOne({ email: userEmail });
+      const user = await User.findById(userId);
 
       if (!user) throw new Error('User not found');
 
@@ -300,6 +302,104 @@ router.put('/reset-user-password', verifyJWT, isAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error updating password:', error);
     res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+router.get('/sales-report', async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: 'Month and year are required' });
+    }
+
+    const date = moment(`${year}-${month}`, 'YYYY-MMMM');
+    const monthStart = date.startOf('month').toDate();
+    const monthEnd = date.endOf('month').toDate();
+
+    const membershipHistory = await MembershipHistory.find({
+      membershipStartDate: { $gte: monthStart, $lte: monthEnd },
+    })
+      .populate('membership')
+      .lean();
+
+    const membershipHistoryAggregation = await MembershipHistory.aggregate([
+      {
+        $match: {
+          membershipStartDate: { $gte: monthStart, $lte: monthEnd },
+        },
+      },
+      {
+        $lookup: {
+          from: 'memberships',
+          localField: 'membership',
+          foreignField: '_id',
+          as: 'membershipDetails',
+        },
+      },
+      { $unwind: '$membershipDetails' },
+      {
+        $group: {
+          _id: '$membershipDetails._id',
+          total: { $sum: '$membershipDetails.price' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'memberships',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'membershipDetails',
+        },
+      },
+      { $unwind: '$membershipDetails' },
+    ]);
+
+    const appointments = await Appointment.aggregate([
+      {
+        $match: {
+          date: { $gte: monthStart, $lte: monthEnd },
+          status: { $ne: appointmentStatus.CANCELLED },
+        },
+      },
+      {
+        $group: {
+          _id: '$trainerId', // Group by trainer
+          totalAppointments: { $sum: 1 }, // Count number of appointments
+        },
+      },
+      {
+        $lookup: {
+          from: 'users', // Assuming trainers are stored in 'users' collection
+          localField: '_id',
+          foreignField: '_id',
+          as: 'trainerDetails',
+        },
+      },
+      {
+        $unwind: '$trainerDetails',
+      },
+      {
+        $project: {
+          _id: 0,
+          trainer: {
+            id: '$trainerDetails._id',
+            name: '$trainerDetails.name',
+            email: '$trainerDetails.email',
+          },
+          totalAppointments: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      numberOfMemberships: membershipHistory.length,
+      appointments,
+      membershipHistoryAggregation,
+    });
+  } catch (err) {
+    console.error('Error creating sales report', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
