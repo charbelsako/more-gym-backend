@@ -305,7 +305,7 @@ router.put('/reset-user-password', verifyJWT, isAdmin, async (req, res) => {
   }
 });
 
-router.get('/sales-report', async (req, res) => {
+router.get('/sales-report', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { month, year } = req.query;
 
