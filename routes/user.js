@@ -13,7 +13,7 @@ const MembershipHistory = require('../models/MembershipHistory');
 
 router.post('/signup', async (req, res) => {
   try {
-    const { username, password, name, defaultLocation, trainerType } = req.body;
+    const { username, password, name, defaultLocation } = req.body;
 
     let { email } = req.body;
 
@@ -50,7 +50,6 @@ router.post('/signup', async (req, res) => {
       name,
       defaultLocation,
       role: ROLES.CUSTOMER,
-      trainerType,
     });
 
     await newUser.save();
