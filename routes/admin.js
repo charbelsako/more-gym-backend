@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
+const validateRegisterInput = require('../validators/validateSignUp');
 
 const User = require('../models/User');
 const StaticData = require('../models/StaticData');
@@ -12,7 +13,7 @@ const PackageSubtype = require('../models/PackageSubtype');
 const Membership = require('../models/Membership');
 const MembershipHistory = require('../models/MembershipHistory');
 const Appointment = require('../models/Appointment');
-const { appointmentStatus } = require('../constants');
+const { appointmentStatus, scheduleStructure } = require('../constants');
 
 // Middleware to check if the user is an admin
 const { isAdmin } = require('../middleware/roles');
@@ -400,6 +401,72 @@ router.get('/sales-report', verifyJWT, isAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error creating sales report', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/register-trainer', async (req, res) => {
+  try {
+    const {
+      username,
+      password,
+      name,
+      trainerType,
+      location,
+      trainerPackageType,
+    } = req.body;
+
+    let schedule = location.map(loc => {
+      let s = { ...scheduleStructure };
+      s.location = loc;
+      return s;
+    });
+
+    let { email } = req.body;
+
+    const { errors, isValid } = validateRegisterInput(req.body);
+
+    // Check validation
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+    email = email.toLowerCase();
+    // Check if email already exists
+    const existingEmail = await User.findOne({ email });
+
+    if (existingEmail) {
+      return res
+        .status(400)
+        .json({ message: 'User already exists with this email' });
+    }
+
+    // Check if the username already exists
+    const existingUser = await User.findOne({ username });
+
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: 'User already exists with this username' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      name,
+      role: ROLES.TRAINER,
+      location: [location],
+      trainerPackageType,
+      trainerType,
+      schedule,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'Trainer registered successfully' });
+  } catch (error) {
+    console.error('Error during sign-up:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
