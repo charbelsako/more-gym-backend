@@ -40,8 +40,8 @@ async function handleLogin(req, res) {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      // secure: true,
+      // sameSite: 'none',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -111,8 +111,8 @@ async function handleLogout(req, res) {
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      // secure: true,
+      // sameSite: 'none',
     });
 
     res.sendStatus(statusCodes.NO_CONTENT);

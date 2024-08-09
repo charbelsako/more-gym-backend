@@ -9,8 +9,8 @@ const statusCodes = {
 
 const cookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: 'none',
+  // secure: true,
+  // sameSite: 'none',
 };
 
 const ROLES = {
